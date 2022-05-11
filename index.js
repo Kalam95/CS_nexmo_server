@@ -57,12 +57,12 @@ const {
  * @param {object} event - this is a conversation api event. Find the list of the event here: https://jurgob.github.io/conversation-service-docs/#/customv3
  * @param {object} nexmo - see the context section above
  * */
- const path = require("path");
+const path = require("path");
 
 const DATACENTER = `https://api.nexmo.com`
 
- const CS_URL = `https://api.nexmo.com`;
- const WS_URL = `https://ws.nexmo.com`; 
+const CS_URL = `https://api.nexmo.com`;
+const WS_URL = `https://ws.nexmo.com`;
 
 
 /**
@@ -72,161 +72,154 @@ const DATACENTER = `https://api.nexmo.com`
  * the only difference is that in every req, you will have a req.nexmo variable containning a nexmo context
  * 
  */
-const route =  (app) => {
-    app.get('/hello', async (req, res) => {
+const route = (app) => {
+  app.get('/hello', async (req, res) => {
 
-        const {
-            logger,
-        } = req.nexmo;
+    const {
+      logger,
+    } = req.nexmo;
 
-        logger.info(`Hello Request HTTP `)
+    logger.info(`Hello Request HTTP `)
 
-        res.json({
-            text: "Hello Request!"
-        })
+    res.json({
+      text: "Hello Request!"
     })
+  })
 
-    app.post("/api/login", async (req, res) => {
-        console.log("Nexmo Object", req.nexmo)
-      const {
-        generateBEToken,
-        generateUserToken,
-        logger,
-        csClient,
-        storageClient,
-      } = req.nexmo;
-      let userResponse
-      const { username } = req.body;
-      try {
-        userResponse = await csClient({
-          url: `${CS_URL}/v0.3/users?name=${username}`,
-          method: "get"
-        });
-      } catch (err) {
-          logger.error({ err }, "ERROR");
-          return res.status(err.status || 500).json({error: err.toJSON()});
-      }
-      
-      logger.info({user: userResponse.data, token: generateUserToken(username)}, "User received is: ")
-      res.json({
-        user: username,
-        token: generateUserToken(username),
-        ws_url: WS_URL,
-        cs_url: CS_URL,
+  app.post("/api/login", async (req, res) => {
+    console.log("Nexmo Object", req.nexmo)
+    const {
+      generateBEToken,
+      generateUserToken,
+      logger,
+      csClient,
+      storageClient,
+    } = req.nexmo;
+    let userResponse
+    const { username } = req.body;
+    try {
+      userResponse = await csClient({
+        url: `${CS_URL}/v0.3/users?name=${username}`,
+        method: "get"
       });
-    });
-  
-    app.post("/api/subscribe", async (req, res) => {
-      const {
-        generateBEToken,
-        generateUserToken,
-        logger,
-        csClient,
-        storageClient,
-      } = req.nexmo;
-  
-      try {
-        const { username } = req.body;
-        logger.info({body: req.body }, "New users request")
-        const resNewUser = await csClient({
-          url: `${CS_URL}/v0.3/users`,
-          method: "post",
-          data: {
-            name: username,
-          },
-        });
-  
-        await storageClient.set(`user:${username}`, resNewUser.data.id);
-        const storageUser = await storageClient.get(`user:${username}`);
-  
-        return res.json({ user: username, token: generateUserToken(username), resNewUser: resNewUser.data, storageUser });
-      } catch (err) {
-        logger.error({ err }, "ERROR");
-        return res.status(err.status || 500).json({error: err.toJSON()});
-      }
-    });
+    } catch (err) {
+      logger.error({ err }, "ERROR");
+      return res.status(err.status || 500).json({ error: err.toJSON() });
+    }
 
-    app.get("/api/users", async (req, res) => {
-        const {
-            generateBEToken,
-            generateUserToken,
-            logger,
-            csClient,
-            storageClient,
-          } = req.nexmo;
-          const users = await csClient({
-              url: `${CS_URL}/v0.3/users`
-          })
-        res.json({
-            users: users.data
-        })
+    logger.info({ user: userResponse.data, token: generateUserToken(username) }, "User received is: ")
+    res.json({
+      user: username,
+      token: generateUserToken(username),
+      ws_url: WS_URL,
+      cs_url: CS_URL,
+    });
+  });
+
+  app.post("/api/subscribe", async (req, res) => {
+    const {
+      generateBEToken,
+      generateUserToken,
+      logger,
+      csClient,
+      storageClient,
+    } = req.nexmo;
+
+    try {
+      const { username } = req.body;
+      logger.info({ body: req.body }, "New users request")
+      const resNewUser = await csClient({
+        url: `${CS_URL}/v0.3/users`,
+        method: "post",
+        data: {
+          name: username,
+        },
+      });
+
+      await storageClient.set(`user:${username}`, resNewUser.data.id);
+      const storageUser = await storageClient.get(`user:${username}`);
+
+      return res.json({ user: username, token: generateUserToken(username), resNewUser: resNewUser.data, storageUser });
+    } catch (err) {
+      logger.error({ err }, "ERROR");
+      return res.status(err.status || 500).json({ error: err.toJSON() });
+    }
+  });
+
+  app.get("/api/users", async (req, res) => {
+    const {
+      generateBEToken,
+      generateUserToken,
+      logger,
+      csClient,
+      storageClient,
+    } = req.nexmo;
+    const users = await csClient({
+      url: `${CS_URL}/v0.3/users`
     })
-  
+    res.json({
+      users: users.data
+    })
+  })
+
 }
 
 const voiceEvent = async (req, res, next) => {
-    const { logger, csClient } = req.nexmo;
+  const { logger, csClient } = req.nexmo;
+  logger.info({ event: req.body }, "event body is")
+  try {
 
-    try { 
-        
-        res.json({})
+    res.json({})
 
-    } catch (err) {
-        
-        logger.error("Error on voiceEvent function")
-    }
-    
+  } catch (err) {
+
+    logger.error("Error on voiceEvent function")
+  }
+
 }
 
 const voiceAnswer = async (req, res, next) => {
-    const { logger, csClient, config } = req.nexmo;
-    logger.info("req", { req_body   : req.body})
-    logger.info({config}, "Configurations are: ")
-    try {
-        return res.json([{
-                        "action": "talk",
-                        "text": `Hi , ${req.body.from}`
-                    },
-                    {
-                        "action": "connect",
-                        "timeout": "45",
-                        "from": config.phone_number,
-                        "endpoint": [
-                          {
-                            "type": "app",
-                            "user": `${req.body.to}`
-                          }
-                        ]
-                      }
-        ])
-        // return res.json([
-        //     {
-        //         "action": "talk",
-        //         "text": `Hello , This Is an NCCO Demo`
-        //     },
-        //     {
-        //         "action": "talk",
-        //         text: `Your number is ${req.body.from.split("").join(" ")}`
-        //     },
-        //     {
-        //         "action": "talk",
-        //         text: `And you are colling the number ${req.body.to.split("").join(" ")}`
-        //     },
-        //     {
-        //         "action": "talk",
-        //         text: `Have a nice day, now we are gonna hangup`
-        //     }
-        // ])
-
-    } catch (err) {
-
-        logger.error("Error on voiceAnswer function")
+  const { logger, csClient, config } = req.nexmo;
+  logger.info("req", { req_body: req.body })
+  logger.info({ config }, "Configurations are: ")
+  try {
+    const isPhoneNumber = onlyNumbers(req.body.to)
+    const from = req.body.from || req.body.from_user
+    return res.json([{
+      "action": "talk",
+      "text": `Hi , ${from} , We are connecting you with ${req.body.to.split("").join(" ")}`
+    },
+    {
+      "action": "connect",
+      "timeout": "45",
+      "from": isPhoneNumber ? config.phone_number : from,
+      "endpoint": [
+        {
+          "type": isPhoneNumber ? "phone" : "app",
+          "number": isPhoneNumber ? req.body.to : null,
+          "user": isPhoneNumber ? null : req.body.to
+        }
+      ]
     }
+    // {
+    //   "action": "stream",
+    //   "streamUrl": ["https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba-online-audio-converter.com_-1.wav"]
+    // }
+    ])
+  } catch (err) {
+    logger.error("Error on voiceAnswer function", { err })
+  }
 
 }
 
+function onlyNumbers(str) {
+  if (str) {
+    return /^[0-9]+$/.test(str)
+  }
+  return false
+}
 module.exports = {
-    voiceAnswer,
-    voiceEvent,
-    route
+  voiceAnswer,
+  voiceEvent,
+  route
 }
