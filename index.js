@@ -3,7 +3,7 @@ const {
   voiceEvent,
   rtcEvent,
   route
-} = require("./index.contactCenter")
+} = require("./index.chat")
 
 
 module.exports = {
