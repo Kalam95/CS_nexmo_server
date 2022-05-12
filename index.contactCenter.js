@@ -254,6 +254,7 @@ const {
    const { logger } = nexmo
    logger.info("Event for RTC are: ", { even: event })
  }
+ 
  module.exports = {
    voiceAnswer,
    voiceEvent,
