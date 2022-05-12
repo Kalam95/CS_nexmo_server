@@ -128,39 +128,18 @@ const WS_URL = `https://ws.nexmo.com`;
           } = req.nexmo; 
           logger.info({body: req.body}, "POST request body is: ")
           const id = req.params.conversationID
-        //   const eventJson = {
-        //     "type": "audio:say",
-        //     "body": {
-        //       "premium": false,
-        //       "level": 0,
-        //       "loop": 1,
-        //       "language": "id-ID",
-        //       "style": 2,
-        //       "text": "<speak>Kepada yuser Kredivo terhormat. Ingin mengingatkan, bahwa tagihan Kredivo-mu sejumlah Rp 203.000 jatuh tempo hari ini. Segera lakukan pembayaran agar bebas dari tagihan dan terhindar dari denda keterlambatan. Terima kasih.</speak>",
-        //       "queue": true,
-        //     //   "say_id": "6eb34218-7df1-4f2e-8d35-ee1a8687eb80"
-        //     }
-        //   }
-        const eventJson = {
+          const eventJson = {
             "type": "audio:say",
             "body": {
-              "premium": false,
-              "level": 0,
+              "level": 1,
               "loop": 1,
+              "queue": true,
               "language": "en-US",
               "style": 2,
-              "text": "<speak>This is the test speach. o show you th epower of BE front end doesnot matter to us.</speak>",
-              "queue": true,
-            //   "say_id": "6eb34218-7df1-4f2e-8d35-ee1a8687eb80"
+              "text": req.body.text,
+              "ssml": true,
             }
           }
-        // const eventJson = {
-        //     type: "text",
-        //     from: req.body.from,
-        //     body: {
-        //         text: "This is a test String form BE"
-        //     }
-        // }
           try {
             const response = await csClient({
                 url: `${CS_URL}/v0.3/conversations/${id}/events`,
@@ -173,7 +152,37 @@ const WS_URL = `https://ws.nexmo.com`;
               logger.error({error: error}, "error while sending event is: ", ` ${CS_URL}/v0.3/conversations/${id}/event`)
               res.json(error.toJSON ? error.toJSON() : error.toString())
           }
-          
+    })
+
+    app.post("/api/:conversationID/text", async (req, res) => {
+        const {
+            generateBEToken,
+            generateUserToken,
+            logger,
+            csClient,
+            storageClient,
+          } = req.nexmo; 
+          logger.info({body: req.body}, "POST request body is: ")
+          const id = req.params.conversationID
+          const eventJson = {
+            "type": "text",
+            "body": {
+              "text": req.body.text,
+            },
+            from: req.body.from
+          }
+          try {
+            const response = await csClient({
+                url: `${CS_URL}/v0.3/conversations/${id}/events`,
+                method: "post",
+                data: eventJson
+            })
+            logger.info({api: response.data}, "its here")
+            res.json(response.data)
+          } catch (error) {
+              logger.error({error: error}, "error while sending event is: ", ` ${CS_URL}/v0.3/conversations/${id}/event`)
+              res.json(error.toJSON ? error.toJSON() : error.toString())
+          }
     })
   }
 

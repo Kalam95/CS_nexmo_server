@@ -1,9 +1,11 @@
 const {
+  route
+} = require("./index.chat");
+const {
   voiceAnswer,
   voiceEvent,
   rtcEvent,
-  route
-} = require("./index.chat")
+} = require("./index.contactCenter")
 
 
 module.exports = {
