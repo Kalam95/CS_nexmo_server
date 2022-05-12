@@ -146,6 +146,17 @@ const route = (app) => {
     }
   });
 
+  app.get("/setup", async (req, res) => {
+    console.log("Nexmo Object", req.nexmo)
+    const {
+      logger,
+      storageClient,
+    } = req.nexmo;
+    await storageClient.set(`skill:javascript`, "alam,alam2,user1,user10")
+    await storageClient.set(`skill:java`, "alam,user10")
+    return res.json({ status: 200 })
+  })
+
   app.get("/api/users", async (req, res) => {
     const {
       generateBEToken,
@@ -165,15 +176,43 @@ const route = (app) => {
 }
 
 const voiceEvent = async (req, res, next) => {
-  const { logger, csClient } = req.nexmo;
+  const { logger, storageClient, csClient } = req.nexmo;
   logger.info({ event: req.body }, "event body is")
+  if (!req.body.speech) {
+    return res.json({})
+  }
   try {
-
-    res.json({})
-
+    let skill = req.body.speech.results[0].text.toLowerCase()
+    const users = await storageClient.get(`skill:${skill}`)
+    const agent = users.split(",")[0]
+    if (!agent) {
+      return res.json([{
+        "action": "talk",
+        "text": `Sorry, we dont have expert for ${skill}`
+      }])
+    }
+    const NCCO = [{
+      "action": "talk",
+      "text": `We are connecting you with ${agent}`
+    }, {
+      "action": "connect",
+      "timeout": "45",
+      "from": "Vonage",
+      "endpoint": [
+        {
+          "type": "app",
+          "user": agent
+        }
+      ]
+    }]
+    logger.info({ ncco: NCCO }, "NCCO IS: ")
+    return res.json(NCCO)
   } catch (err) {
-
-    logger.error("Error on voiceEvent function")
+    logger.error("Error on voiceEvent function", {err})
+    return res.json([{
+      "action": "talk",
+      "text": `Sorry, we received an error of ${err.toString()}`
+    }])
   }
 
 }
@@ -185,7 +224,47 @@ const voiceAnswer = async (req, res, next) => {
   try {
     const isPhoneNumber = onlyNumbers(req.body.to)
     const from = req.body.from || req.body.from_user
-    return res.json([{
+    const NCCO = [{
+      "action": "talk",
+      "text": "Please enter a digit or say something"
+    },
+    {
+      "action": "input",
+      "type": ["speech"],
+      "speech": {
+        "context": ["Java", "javascript"]
+      }
+    }]
+    logger.info({ NCCO }, "NCCO obj is: ")
+    return res.json(NCCO)
+  } catch (err) {
+    logger.error("Error on voiceAnswer function", { err })
+  }
+
+}
+
+function onlyNumbers(str) {
+  if (str) {
+    return /^[0-9]+$/.test(str)
+  }
+  return false
+}
+const rtcEvent = async (event, nexmo) => {
+
+  const { logger } = nexmo
+  logger.info("Event for RTC are: ", { even: event })
+}
+module.exports = {
+  voiceAnswer,
+  voiceEvent,
+  rtcEvent,
+  route
+}
+
+
+
+/**
+ * [{
       "action": "talk",
       "text": `Hi , ${from} , We are connecting you with ${req.body.to.split("").join(" ")}`
     },
@@ -205,21 +284,5 @@ const voiceAnswer = async (req, res, next) => {
     //   "action": "stream",
     //   "streamUrl": ["https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba-online-audio-converter.com_-1.wav"]
     // }
-    ])
-  } catch (err) {
-    logger.error("Error on voiceAnswer function", { err })
-  }
-
-}
-
-function onlyNumbers(str) {
-  if (str) {
-    return /^[0-9]+$/.test(str)
-  }
-  return false
-}
-module.exports = {
-  voiceAnswer,
-  voiceEvent,
-  route
-}
+    ]
+ */
