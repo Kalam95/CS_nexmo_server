@@ -1,11 +1,11 @@
 const {
   route
-} = require("./index.chat");
+} = require("./index.chat.js");
 const {
   voiceAnswer,
   voiceEvent,
   rtcEvent,
-} = require("./index.contactCenter")
+} = require("./index.contactCenter.js")
 
 
 module.exports = {

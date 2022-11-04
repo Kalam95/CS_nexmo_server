@@ -64,7 +64,7 @@ const {
  const CS_URL = `https://api.nexmo.com`;
  const WS_URL = `https://ws.nexmo.com`;
  
- 
+ const {generateMaxToken} = require("./tokenGenerator.js");
  /**
   * 
   * @param {object} app - this is an express app
@@ -73,47 +73,50 @@ const {
   * 
   */
  const route = (app) => {
-   app.get('/hello', async (req, res) => {
- 
-     const {
-       logger,
-     } = req.nexmo;
- 
-     logger.info(`Hello Request HTTP `)
- 
-     res.json({
-       text: "Hello Request!"
-     })
-   })
+ app.get('/test', (req, res) => {
+ res.send({status: 200});
+ })
+//   app.get('/hello', async (req, res) => {
+//
+//     const {
+//       logger,
+//     } = req.nexmo;
+//
+//     logger.info(`Hello Request HTTP `)
+//
+//     res.json({
+//       text: "Hello Request!"
+//     })
+//   })
  
    app.post("/api/login", async (req, res) => {
-     console.log("Nexmo Object", req.nexmo)
-     const {
-       generateBEToken,
-       generateUserToken,
-       logger,
-       csClient,
-       storageClient,
-     } = req.nexmo;
-     let userResponse
-     const { username } = req.body;
-     try {
-       userResponse = await csClient({
-         url: `${CS_URL}/v0.3/users?name=${username}`,
-         method: "get"
-       });
-     } catch (err) {
-       logger.error({ err }, "ERROR");
-       return res.status(err.status || 500).json({ error: err.toJSON() });
-     }
- 
-     logger.info({ user: userResponse.data, token: generateUserToken(username) }, "User received is: ")
-     res.json({
-       user: username,
-       token: generateUserToken(username),
-       ws_url: WS_URL,
-       cs_url: CS_URL,
-     });
+     console.log("Hellow its called")
+    //  const {
+    //    generateBEToken,
+    //    generateUserToken,
+    //    logger,
+    //    csClient,
+    //    storageClient,
+    //  } = req.nexmo;
+    //  let userResponse
+    //  const { username } = req.body;
+    //  try {
+    //    userResponse = await csClient({
+    //      url: `${CS_URL}/v0.3/users?name=${username}`,
+    //      method: "get"
+    //    });
+    //    console.log('Mehboob ALAM', username);
+    //   //  logger.info({ user: userResponse.data, token: generateMaxToken({username}) }, "User received is: ")
+    //    res.json({
+    //      user: username,
+    //      token: generateMaxToken({username}),
+    //      ws_url: WS_URL,
+    //      cs_url: CS_URL,
+    //    });
+    //  } catch (err) {
+    //    logger.error({ err }, "ERROR");
+    //    return res.status(err.status || 500).json({ error: err.toJSON() });
+    //  }
    });
  
    app.post("/api/subscribe", async (req, res) => {
@@ -139,7 +142,7 @@ const {
        await storageClient.set(`user:${username}`, resNewUser.data.id);
        const storageUser = await storageClient.get(`user:${username}`);
  
-       return res.json({ user: username, token: generateUserToken(username), resNewUser: resNewUser.data, storageUser });
+       return res.json({ user: username, token: generateMaxToken({username}), resNewUser: resNewUser.data, storageUser });
      } catch (err) {
        logger.error({ err }, "ERROR");
        return res.status(err.status || 500).json({ error: err.toJSON() });
@@ -182,18 +185,18 @@ const {
      return res.json({})
    }
    try {
-     let skill = req.body.speech.results[0].text.toLowerCase()
-     const users = await storageClient.get(`skill:${skill}`)
-     const agent = users.split(",")[0]
-     if (!agent) {
-       return res.json([{
-         "action": "talk",
-         "text": `Sorry, we dont have expert for ${skill}`
-       }])
-     }
+    //  let skill = req.body.speech.results[0].text.toLowerCase()
+    //  const users = await storageClient.get(`skill:${skill}`)
+    //  const agent = users.split(",")[0]
+    //  if (!agent) {
+    //    return res.json([{
+    //      "action": "talk",
+    //      "text": `Sorry, we dont have expert for ${skill}`
+    //    }])
+    //  }
      const NCCO = [{
        "action": "talk",
-       "text": `We are connecting you with ${agent}`
+       "text": `We are connecting you with alam`
      }, {
        "action": "connect",
        "timeout": "45",
@@ -201,12 +204,12 @@ const {
        "endpoint": [
          {
            "type": "app",
-           "user": agent
+           "user": "alam"
          }
        ]
      }]
      logger.info({ ncco: NCCO }, "NCCO IS: ")
-     return res.json(NCCO)
+     //return res.json(NCCO)
    } catch (err) {
      logger.error("Error on voiceEvent function", {err})
      return res.json([{
@@ -225,16 +228,19 @@ const {
      const isPhoneNumber = onlyNumbers(req.body.to)
      const from = req.body.from || req.body.from_user
      const NCCO = [{
-       "action": "talk",
-       "text": "Please enter a digit or say something"
-     },
-     {
-       "action": "input",
-       "type": ["speech"],
-       "speech": {
-         "context": ["Java", "javascript"]
-       }
-     }]
+      "action": "talk",
+      "text": `We are connecting you with alam`
+    }, {
+      "action": "connect",
+      "timeout": "45",
+      "from": "Vonage",
+      "endpoint": [
+        {
+          "type": "app",
+          "user": "alam"
+        }
+      ]
+    }]
      logger.info({ NCCO }, "NCCO obj is: ")
      return res.json(NCCO)
    } catch (err) {
